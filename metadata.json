@@ -1,0 +1,8 @@
+{
+  "name": "ASLA — Akademi Syans ak Lèt Ayiti (Grades 7–12)",
+  "description": "Platfòm edikasyonèl ayisyen konplè pou elèv klas 7yèm rive 12yèm ane (Grades 7–12), paran, ak administrasyon lekòl la.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

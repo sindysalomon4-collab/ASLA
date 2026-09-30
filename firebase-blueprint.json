@@ -1,0 +1,384 @@
+{
+  "entities": {
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Administrator record granting school administration privileges.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the administrator",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified administrator email",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp"
+        }
+      },
+      "required": ["ownerId", "email", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account profile for Aprantisaj se lò Akademi (ASLA) isolated to owner and school administration.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the account owner",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Full name of the user",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the user",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the user",
+          "minLength": 4,
+          "maxLength": 40
+        },
+        "accountType": {
+          "type": "string",
+          "description": "Account type within ASLA",
+          "enum": ["Student", "Parent", "Administration"]
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "description": "Interface language preference",
+          "enum": ["ht", "fr", "en"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp"
+        }
+      },
+      "required": ["ownerId", "fullName", "email", "phone", "accountType", "preferredLanguage", "createdAt", "updatedAt"]
+    },
+    "StudentRecord": {
+      "title": "StudentRecord",
+      "description": "ASLA Student enrollment record for Grades 7 through 12.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the student or registering user",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Student full legal name",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "Student date of birth YYYY-MM-DD",
+          "minLength": 8,
+          "maxLength": 20
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Student email address",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "phone": {
+          "type": "string",
+          "description": "Student phone contact",
+          "minLength": 4,
+          "maxLength": 40
+        },
+        "grade": {
+          "type": "string",
+          "description": "Assigned ASLA academic grade level (Grades 7-12 only)",
+          "enum": ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"]
+        },
+        "classroom": {
+          "type": "string",
+          "description": "Assigned classroom section",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "parentName": {
+          "type": "string",
+          "description": "Parent or guardian full name",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "parentContact": {
+          "type": "string",
+          "description": "Parent or guardian phone or email contact",
+          "minLength": 4,
+          "maxLength": 120
+        },
+        "approvalStatus": {
+          "type": "string",
+          "description": "Administrative enrollment status",
+          "enum": ["Pending", "Approved", "Rejected", "Suspended", "Active"]
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "15,000 HTG registration fee verification status",
+          "enum": ["Pending", "Approved", "Rejected"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "fullName",
+        "dateOfBirth",
+        "email",
+        "phone",
+        "grade",
+        "classroom",
+        "parentName",
+        "parentContact",
+        "approvalStatus",
+        "paymentStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Registration fee payment record (15,000 HTG) and receipt verification.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the payer",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentId": {
+          "type": "string",
+          "description": "ID of the student being registered",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Full name of the student",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "grade": {
+          "type": "string",
+          "description": "Grade level of the student",
+          "enum": ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"]
+        },
+        "classroom": {
+          "type": "string",
+          "description": "Classroom of the student",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "parentInfo": {
+          "type": "string",
+          "description": "Parent name and contact details",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "amountHtg": {
+          "type": "number",
+          "description": "Registration fee amount in HTG (15000)"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method used (MonCash, Natcash, Sogebank, BNC, Unibank)",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "transactionRef": {
+          "type": "string",
+          "description": "Transaction or reference number",
+          "minLength": 3,
+          "maxLength": 100
+        },
+        "receiptFileName": {
+          "type": "string",
+          "description": "Uploaded receipt file name or summary",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "status": {
+          "type": "string",
+          "description": "Verification status controlled by Administration",
+          "enum": ["Pending", "Approved", "Rejected"]
+        },
+        "rejectionReason": {
+          "type": "string",
+          "description": "Optional reason when rejected by Administration",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update server timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "studentId",
+        "studentName",
+        "grade",
+        "classroom",
+        "parentInfo",
+        "amountHtg",
+        "paymentMethod",
+        "transactionRef",
+        "receiptFileName",
+        "status",
+        "rejectionReason",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SubmissionRecord": {
+      "title": "SubmissionRecord",
+      "description": "Student submission for Classwork, Homework, Quiz, or Exam.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the student",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "grade": {
+          "type": "string",
+          "description": "Academic grade level",
+          "enum": ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"]
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Subject identifier",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "chapterNumber": {
+          "type": "number",
+          "description": "Chapter number (1-20)"
+        },
+        "lessonNumber": {
+          "type": "number",
+          "description": "Lesson number (1-8)"
+        },
+        "workType": {
+          "type": "string",
+          "description": "Category of academic work",
+          "enum": ["Classwork", "Homework", "Quiz", "Exam"]
+        },
+        "responseContent": {
+          "type": "string",
+          "description": "Student submitted response or answers",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "status": {
+          "type": "string",
+          "description": "Submission status",
+          "enum": ["Not Started", "In Progress", "Submitted", "Graded", "Missing"]
+        },
+        "score": {
+          "type": "number",
+          "description": "Numeric score from 0 to 100"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Submission creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Submission update timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "grade",
+        "subjectId",
+        "chapterNumber",
+        "lessonNumber",
+        "workType",
+        "responseContent",
+        "status",
+        "score",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted administrator records."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile documents isolated to owner or admin."
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/StudentRecord" },
+      "description": "ASLA student enrollment records for Grades 7-12."
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentRecord" },
+      "description": "15,000 HTG registration fee payment and receipt records."
+    },
+    "/submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/SubmissionRecord" },
+      "description": "Student classwork, homework, quiz, and exam submissions."
+    }
+  }
+}

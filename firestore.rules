@@ -1,0 +1,249 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() && request.auth.token.email == 'sindysalomon4@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    function isValidGrade(grade) {
+      return grade is string && grade.size() >= 7 && grade.size() <= 8 &&
+        grade in ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+    }
+
+    // Blueprint Validation Helpers
+    function isValidAdminRecord(data) {
+      return data.keys().hasAll(['ownerId', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['ownerId', 'email', 'createdAt']) &&
+        isValidId(data.ownerId) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['ownerId', 'fullName', 'email', 'phone', 'accountType', 'preferredLanguage', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'fullName', 'email', 'phone', 'accountType', 'preferredLanguage', 'createdAt', 'updatedAt']) &&
+        isValidId(data.ownerId) &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 120 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+        data.phone is string && data.phone.size() >= 4 && data.phone.size() <= 40 &&
+        data.accountType is string && data.accountType.size() >= 6 && data.accountType.size() <= 14 &&
+        data.accountType in ['Student', 'Parent', 'Administration'] &&
+        data.preferredLanguage is string && data.preferredLanguage.size() == 2 &&
+        data.preferredLanguage in ['ht', 'fr', 'en'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidStudentRecord(data) {
+      return data.keys().hasAll([
+          'ownerId', 'fullName', 'dateOfBirth', 'email', 'phone',
+          'grade', 'classroom', 'parentName', 'parentContact',
+          'approvalStatus', 'paymentStatus', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'fullName', 'dateOfBirth', 'email', 'phone',
+          'grade', 'classroom', 'parentName', 'parentContact',
+          'approvalStatus', 'paymentStatus', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 120 &&
+        data.dateOfBirth is string && data.dateOfBirth.size() >= 8 && data.dateOfBirth.size() <= 20 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+        data.phone is string && data.phone.size() >= 4 && data.phone.size() <= 40 &&
+        isValidGrade(data.grade) &&
+        data.classroom is string && data.classroom.size() >= 2 && data.classroom.size() <= 60 &&
+        data.parentName is string && data.parentName.size() >= 2 && data.parentName.size() <= 120 &&
+        data.parentContact is string && data.parentContact.size() >= 4 && data.parentContact.size() <= 120 &&
+        data.approvalStatus is string && data.approvalStatus.size() >= 6 && data.approvalStatus.size() <= 9 &&
+        data.approvalStatus in ['Pending', 'Approved', 'Rejected', 'Suspended', 'Active'] &&
+        data.paymentStatus is string && data.paymentStatus.size() >= 7 && data.paymentStatus.size() <= 8 &&
+        data.paymentStatus in ['Pending', 'Approved', 'Rejected'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidPaymentRecord(data) {
+      return data.keys().hasAll([
+          'ownerId', 'studentId', 'studentName', 'grade', 'classroom',
+          'parentInfo', 'amountHtg', 'paymentMethod', 'transactionRef',
+          'receiptFileName', 'status', 'rejectionReason', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'studentId', 'studentName', 'grade', 'classroom',
+          'parentInfo', 'amountHtg', 'paymentMethod', 'transactionRef',
+          'receiptFileName', 'status', 'rejectionReason', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        isValidId(data.studentId) &&
+        data.studentName is string && data.studentName.size() >= 2 && data.studentName.size() <= 120 &&
+        isValidGrade(data.grade) &&
+        data.classroom is string && data.classroom.size() >= 2 && data.classroom.size() <= 60 &&
+        data.parentInfo is string && data.parentInfo.size() >= 2 && data.parentInfo.size() <= 200 &&
+        data.amountHtg is number && data.amountHtg == 15000 &&
+        data.paymentMethod is string && data.paymentMethod.size() >= 2 && data.paymentMethod.size() <= 60 &&
+        data.transactionRef is string && data.transactionRef.size() >= 3 && data.transactionRef.size() <= 100 &&
+        data.receiptFileName is string && data.receiptFileName.size() >= 1 && data.receiptFileName.size() <= 255 &&
+        data.status is string && data.status.size() >= 7 && data.status.size() <= 8 &&
+        data.status in ['Pending', 'Approved', 'Rejected'] &&
+        data.rejectionReason is string && data.rejectionReason.size() <= 500 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSubmissionRecord(data) {
+      return data.keys().hasAll([
+          'ownerId', 'grade', 'subjectId', 'chapterNumber', 'lessonNumber',
+          'workType', 'responseContent', 'status', 'score', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'grade', 'subjectId', 'chapterNumber', 'lessonNumber',
+          'workType', 'responseContent', 'status', 'score', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        isValidGrade(data.grade) &&
+        isValidId(data.subjectId) &&
+        data.chapterNumber is number && data.chapterNumber >= 1 && data.chapterNumber <= 20 &&
+        data.lessonNumber is number && data.lessonNumber >= 1 && data.lessonNumber <= 8 &&
+        data.workType is string && data.workType.size() >= 4 && data.workType.size() <= 9 &&
+        data.workType in ['Classwork', 'Homework', 'Quiz', 'Exam'] &&
+        data.responseContent is string && data.responseContent.size() >= 1 && data.responseContent.size() <= 5000 &&
+        data.status is string && data.status.size() >= 6 && data.status.size() <= 11 &&
+        data.status in ['Not Started', 'In Progress', 'Submitted', 'Graded', 'Missing'] &&
+        data.score is number && data.score >= 0 && data.score <= 100 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // 1. Admins Collection
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(adminId) && isValidAdminRecord(incoming()) &&
+        incoming().ownerId == adminId && incoming().createdAt == request.time && isAdmin();
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(adminId) && isAdmin();
+    }
+
+    // 2. Users Collection (PII isolated to owner or admin)
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(userId) && isValidUserProfile(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().ownerId == userId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (incoming().accountType in ['Student', 'Parent'] || isAdmin());
+      allow update: if isSignedIn() && isValidId(userId) && isValidUserProfile(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          (request.auth.uid == userId &&
+            incoming().accountType == existing().accountType &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'phone', 'preferredLanguage', 'updatedAt'])) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(userId) && isAdmin();
+    }
+
+    // 3. Students Collection
+    match /students/{studentId} {
+      allow get: if isSignedIn() && isValidId(studentId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(studentId) && isValidStudentRecord(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        ((incoming().approvalStatus == 'Pending' && incoming().paymentStatus == 'Pending') || isAdmin());
+      allow update: if isSignedIn() && isValidId(studentId) && isValidStudentRecord(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          (existing().ownerId == request.auth.uid &&
+            existing().approvalStatus == 'Pending' &&
+            incoming().approvalStatus == existing().approvalStatus &&
+            incoming().paymentStatus == existing().paymentStatus &&
+            incoming().grade == existing().grade &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['phone', 'parentName', 'parentContact', 'updatedAt'])) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(studentId) && isAdmin();
+    }
+
+    // 4. Payments Collection (15,000 HTG Registration Fee & Receipt Verification)
+    match /payments/{paymentId} {
+      allow get: if isSignedIn() && isValidId(paymentId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(paymentId) && isValidPaymentRecord(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/students/$(incoming().studentId)) &&
+        ((incoming().status == 'Pending' && incoming().rejectionReason == '') || isAdmin());
+      allow update: if isSignedIn() && isValidId(paymentId) && isValidPaymentRecord(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().studentId == existing().studentId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          (existing().ownerId == request.auth.uid &&
+            existing().status == 'Pending' &&
+            incoming().status == 'Pending' &&
+            incoming().rejectionReason == existing().rejectionReason &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['paymentMethod', 'transactionRef', 'receiptFileName', 'updatedAt'])) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(paymentId) && isAdmin();
+    }
+
+    // 5. Submissions Collection (Classwork, Homework, Quizzes, Exams)
+    match /submissions/{submissionId} {
+      allow get: if isSignedIn() && isValidId(submissionId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(submissionId) && isValidSubmissionRecord(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        ((incoming().status in ['In Progress', 'Submitted'] && incoming().score == 0) || isAdmin());
+      allow update: if isSignedIn() && isValidId(submissionId) && isValidSubmissionRecord(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          (existing().ownerId == request.auth.uid &&
+            existing().status != 'Graded' &&
+            incoming().status in ['In Progress', 'Submitted'] &&
+            incoming().score == existing().score &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['responseContent', 'status', 'updatedAt'])) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(submissionId) && isAdmin();
+    }
+  }
+}
